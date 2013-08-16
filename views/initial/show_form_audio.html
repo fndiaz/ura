@@ -1,0 +1,21 @@
+{{extend 'layout.html'}}
+
+
+{{block coluna2}}
+
+<div class="span6">
+<div class="well">
+{{=form.custom.begin}}
+
+<legend>Uras</legend>
+
+<label>Nome:</label>
+{{=form.custom.widget.nome}}
+
+<label>Arquivo:</label>
+{{=form.custom.widget.audio}}
+</br></br>
+{{=form.custom.submit}}
+{{=form.custom.end}}
+
+{{end}}

@@ -1,0 +1,20 @@
+{{extend 'layout.html'}}
+
+{{block center}}
+<a id="add" style="margin-left: 1080px;" class="btn btn-info" data-original-title="Adicionar">Adicionar</a>
+{{=grid}}
+
+<script>
+
+function getParam(n){ //funcao get variaveis url
+return (location.search.match(new RegExp(n + '=([^?&=]+)')) || [])[1] || '';
+}
+
+var id = getParam('id'); //pega request id
+$('#add').click(function() {
+	location.href='/ura/add_ura_acoes?id='+id+'';
+});
+
+</script>
+
+{{end}}

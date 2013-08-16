@@ -1,0 +1,371 @@
+(dp1
+S'output'
+p2
+S"<type 'exceptions.TypeError'> 'Query' object is not callable"
+p3
+sS'layer'
+p4
+S'/home/fernado/web2py/tronco/applications/ura/controllers/initial.py'
+p5
+sS'code'
+p6
+S'# coding=UTF-8\nimport commands, os\n\ndef audio():\n\tresponse.title = \'Audios\'\n\tdb.audios.id.readable=False\n\n\tgrid = SQLFORM.grid(db.audios, csv=False,\n\t\t\t\t\tdetails=False, searchable=True, editable=True, \n\t\t\t\t\tcreate=False,  user_signature=False)\n\t\n\treturn response.render("initial/show_grid_audio.html", grid=grid)\n\n\ndef add_audio():\n\tresponse.title = \'Audios\'\n\tform = SQLFORM(db.audios, submit_button=\'Enviar\', deletable=True, \n\t\tfields=[\'nome\', \'audio\'])\n\t\n\tif form.process().accepted:\n\t\taudio = form.vars.audio\n\t\t#print request.vars.nome\n\t\taudio_nome=audio.replace(\'.wav\', \'\') #tirando extens\xc3\xa3o do nome\n\n\t\tsaida = os.system("sox /aldeia/etc/asterisk/audio/cliente/%s -t" \n\t\t\t"raw -r 8000 /aldeia/etc/asterisk/audio/cliente/%s.sln" % (audio, audio_nome)) #convertendo audio\n\t\tif saida is 0: #testa convers\xc3\xa3o do audio\n\t\t\tprint \'ok\'\n\t\t\tsession.flash = \'audio recebido com sucesso\'\n\t\t\tredirect(URL("initial", "/audio"))\n\t\telse:\n\t\t\tresponse.flash = \'Erro de convers\xc3\xa3o, contate o desenvolvedor\'\t\n\telif form.errors:\n\t\tresponse.flash = \'erro, algo n\xc3\xa3o deu certo\'\n\t\n\treturn response.render("initial/show_form_audio.html", form=form)\n\n\ndef uras():\n\tresponse.title = \'Atendimentos\'\n\tdb.uras.id.readable=False\n\n\tlinks = [ lambda row: A(\'+\', _class=\'btn\', \n\t\t\t\t_title=\'Adicionar a\xc3\xa7\xc3\xa3o\', \n\t\t\t\t_href=URL("initial", "/add_ura_acoes", \n\t\t\t\tvars=dict(id=row.id))),\n\t\t\t  lambda row: A(\'A\xc3\xa7\xc3\xb5es\', _class=\'btn\', \n\t\t\t\t_title=\'Ver a\xc3\xa7\xc3\xb5es\', \n\t\t\t\t_href=URL("initial", "/ura_acoes", \n\t\t\t\tvars=dict(id=row.id))) ]\n\n\tgrid = SQLFORM.grid(db.uras, csv=False,\n\t\t\t\t\tdetails=False, searchable=True, editable=True, \n\t\t\t\t\tcreate=False,  user_signature=False, links=links)\n\t\n\treturn response.render("initial/show_grid_uras.html", grid=grid)\n\ndef add_uras():\n\tresponse.title = \'Atendimentos\'\n\tform = SQLFORM(db.uras, submit_button=\'Criar\', deletable=True)\n\t\n\tif form.process().accepted:\n\t\t#print form.vars.audio\n\t\t#print request.vars.nome\n\t\tsession.flash = \'ura criada com sucesso\'\n\t\tredirect(URL("initial", "/uras"))\n\telif form.errors:\n\t\tresponse.flash = \'erro, algo n\xc3\xa3o deu certo\'\n\t\n\treturn response.render("initial/show_form_uras.html", form=form)\n\ndef acoes():\n\tresponse.title = \'A\xc3\xa7\xc3\xb5es\'\n\tdb.acoes.id.readable=False\n\n\tgrid = SQLFORM.grid(db.acoes, csv=False, maxtextlength=103,\n\t\t\t\t\tdetails=False, searchable=True, editable=False,  \n\t\t\t\t\tcreate=False,  user_signature=False, deletable=False)\n\t\n\treturn response.render("initial/show_grid.html", grid=grid)\n\ndef add_acoes():\n\tresponse.title = \'Padr\xc3\xa3o\'\n\tform = SQLFORM(db.acoes, deletable=True)\n\t\n\tif form.process().accepted:\n\t\t#print form.vars.audio\n\t\t#print request.vars.nome\n\t\tsession.flash = \'audio recebido com sucesso\'\n\t\tredirect(URL("initial", "/acoes"))\n\telif form.errors:\n\t\tresponse.flash = \'erro, algo n\xc3\xa3o deu certo\'\n\t\n\treturn response.render("initial/show_form.html", form=form)\n\ndef ura_acoes():\n\tresponse.title = \'Detalhada\'\n\tid_ura = request.vars.id\n\tdb.ura_acoes.id.readable=False\n\n\tquery = ((db.ura_acoes.id_ura == id_ura) (orderby=db.ura_acoes.dtmf))\n\n\tgrid = SQLFORM.grid(query, csv=False,\n\t\t\t\t\tdetails=False, searchable=True, editable=True, \n\t\t\t\t\tcreate=False,  user_signature=False)\n\t\n\treturn response.render("initial/show_grid_uraacoes.html", grid=grid)\n\ndef add_ura_acoes():\n\t#nao estou usando sqlform -- formulario puro\n\turas = db.executesql("SELECT nome FROM uras")\n\tlista_uras=[]\n\tfor ura in uras:\n\t\tlista_uras.append(ura[0])\n\n\tform = SQLFORM.factory(\n\t\tField(\'teste\', requires=IS_IN_DB(db, \'acoes.id\', \'%(nome)s\')),\n\t\tField(\'dep1\', requires=IS_IN_SET(lista_uras)),\n\t\tField(\'dep2\', requires=IS_IN_DB(db, \'uras.id\', \'%(nome)s\'))\n\t\t)\n\tif form.process().accepted:\n\t\tprint form.teste\n\t\tprint form.dep1\n\t\tprint form.dep2\n\t\n\treturn response.render("initial/show_form_ext.html", form=form)\n\ndef ajax_uras():\n\t#print request.vars[\'teste\']\n\turas = db.executesql("SELECT id, nome FROM uras")\n\tprint uras\n\tdrop2=[dict([x]) for x in uras]\n\n\treturn response.json(uras)\n\ndef ajax_ramais():\n\tramais = db.executesql("SELECT ramal_virtual FROM ramal_virtual")\n\n\treturn response.json(ramais)\n\ndef ajax_acoes():\n\tacoes = db.executesql("SELECT id, nome FROM acoes")\n\n\treturn response.json(acoes)\n\ndef ajax_audios():\n\taudios = db.executesql("SELECT id, nome FROM audios")\n\n\treturn response.json(audios)\n\n\ndef form_ura_acoes():\n\t#processa o form ura_acoes e insere no banco\n\tura = request.vars[\'ura\']\n\tdtmf = request.vars[\'dtmf\']\n\tacao = request.vars[\'acao\']\n\topc = request.vars[\'opc\']\n\tprint ura\n\n\tdb.executesql("INSERT INTO ura_acoes (id_ura, dtmf, id_acao, variavel) values (\'%s\', \'%s\', \'%s\', \'%s\')" % (ura, dtmf, acao, opc))\n\tredirect(URL("initial", "/ura_acoes?id=%s" % (ura)))\n\ndef sobre():\n\tresponse.title = \'Sobre\'\n\treturn response.render("initial/principal.html")\n\ndef principal():\n\tredirect(URL("initial", "/audio"))\n\ndef valida_form():\n\t#confere campo dtmf do form ura_acoes\n\tid_ura = request.vars[\'id\']\n\tdtmf = request.vars[\'dtmf\']\n\tvar = db.executesql("SELECT count(*) FROM ura_acoes WHERE id_ura = %s and dtmf = %s" % (id_ura, dtmf))\n\tvar2 = var[0][0]\n\tif var2  == 0:\n\t\ta = True\n\tif var2 == 1:\n\t\ta = False\n\n\treturn response.json(a)\n\n\n\ndef user():\n\tprint a\n\ndef register():\n\treturn auth.register()\n\ndef login():\n        return auth.login()\n\ndef account():\n    return dict(register=auth.register(),\n                login=auth.login())\n\t\ndef download():\n\treturn response.download(request, db)\n\n\n\n\t\n\n\n\n\nresponse._vars=response._caller(ura_acoes)\n'
+p7
+sS'snapshot'
+p8
+(dp9
+S'exception'
+p10
+(dp11
+S'__hash__'
+p12
+S"<method-wrapper '__hash__' of exceptions.TypeError object>"
+p13
+sS'__setattr__'
+p14
+S"<method-wrapper '__setattr__' of exceptions.TypeError object>"
+p15
+sS'__reduce_ex__'
+p16
+S'<built-in method __reduce_ex__ of exceptions.TypeError object>'
+p17
+sS'__getslice__'
+p18
+S"<method-wrapper '__getslice__' of exceptions.TypeError object>"
+p19
+sS'__getitem__'
+p20
+S"<method-wrapper '__getitem__' of exceptions.TypeError object>"
+p21
+sS'__setstate__'
+p22
+S'<built-in method __setstate__ of exceptions.TypeError object>'
+p23
+sS'args'
+p24
+S'("\'Query\' object is not callable",)'
+p25
+sS'__reduce__'
+p26
+S'<built-in method __reduce__ of exceptions.TypeError object>'
+p27
+sS'__str__'
+p28
+S"<method-wrapper '__str__' of exceptions.TypeError object>"
+p29
+sS'__format__'
+p30
+S'<built-in method __format__ of exceptions.TypeError object>'
+p31
+sS'__getattribute__'
+p32
+S"<method-wrapper '__getattribute__' of exceptions.TypeError object>"
+p33
+sS'__class__'
+p34
+S"<type 'exceptions.TypeError'>"
+p35
+sS'__unicode__'
+p36
+S'<built-in method __unicode__ of exceptions.TypeError object>'
+p37
+sS'__delattr__'
+p38
+S"<method-wrapper '__delattr__' of exceptions.TypeError object>"
+p39
+sS'__subclasshook__'
+p40
+S'<built-in method __subclasshook__ of type object>'
+p41
+sS'__repr__'
+p42
+S"<method-wrapper '__repr__' of exceptions.TypeError object>"
+p43
+sS'__dict__'
+p44
+S'{}'
+p45
+sS'__sizeof__'
+p46
+S'<built-in method __sizeof__ of exceptions.TypeError object>'
+p47
+sS'__doc__'
+p48
+S"'Inappropriate argument type.'"
+p49
+sS'__init__'
+p50
+S"<method-wrapper '__init__' of exceptions.TypeError object>"
+p51
+sS'__new__'
+p52
+S'<built-in method __new__ of type object>'
+p53
+ssS'evalue'
+p54
+S"'Query' object is not callable"
+p55
+sS'request'
+p56
+cgluon.html
+XML_unpickle
+p57
+(S's4X\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top">ajax</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">application</td><td valign="top">:</td><td><div>ura</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">args</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">body</td><td valign="top">:</td><td><div>&lt;cStringIO.StringO object at 0x7ff80c2bfa08&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cid</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">client</td><td valign="top">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">controller</td><td valign="top">:</td><td><div>initial</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cookies</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">gateone_user</td><td valign="top">:</td><td><div>eyJ1cG4iOiAiQU5PTllNT1VTIiwgInNlc3Npb24iOiAiT1RNME9UQmtOV05rT0ROaE5HWmlZemsxTm1Oa1lXWmlZamt4Tm1ZMk56WXlOIn0=|1375131417|09bdf15e97a23f37aa2c7e33f32640342bdb8886<table><tr><td style="font-weight:bold;vertical-align:top">comment</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">domain</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">expires</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">httponly</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">max-age</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">secure</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">version</td><td valign="top">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id_agenda</td><td valign="top">:</td><td><div>127.0.0.1-a4393583-5309-4647-8c48-4d03b6bbcffe<table><tr><td style="font-weight:bold;vertical-align:top">comment</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">domain</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">expires</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">httponly</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">max-age</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">secure</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">version</td><td valign="top">:</td><td><div></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id_ura</td><td valign="top">:</td><td><div>127.0.0.1-58644cb9-2ad7-4996-9be5-23cfa11e051e<table><tr><td style="font-weight:bold;vertical-align:top">comment</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">domain</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">expires</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">httponly</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">max-age</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">secure</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">version</td><td valign="top">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">env</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">app_folders</td><td valign="top">:</td><td><div>set([&#x27;/home/fernado/web2py/tronco/applications/agenda/&#x27;, &#x27;/home/fernado/web2py/tronco/applications/ura/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">applications_parent</td><td valign="top">:</td><td><div>/home/fernado/web2py/tronco</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cmd_args</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cmd_options</td><td valign="top">:</td><td><div>&lt;Values at 0x1ddbb00: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;with_scheduler&#x27;: False, &#x27;ips&#x27;: [], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;fernando-workstation&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/home/fernado/web2py/tronco&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;winservice&#x27;: &#x27;&#x27;, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;profiler_filename&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;scheduler_groups&#x27;: None, &#x27;password&#x27;: &#x27;123456&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;interfaces&#x27;: None, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">db_sessions</td><td valign="top">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">debugging</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">gluon_parent</td><td valign="top">:</td><td><div>/home/fernado/web2py/tronco</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept</td><td valign="top">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept_charset</td><td valign="top">:</td><td><div>ISO-8859-1,utf-8;q=0.7,*;q=0.3</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept_encoding</td><td valign="top">:</td><td><div>gzip,deflate,sdch</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_accept_language</td><td valign="top">:</td><td><div>pt-BR,pt;q=0.8,en-US;q=0.6,en;q=0.4</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_cache_control</td><td valign="top">:</td><td><div>max-age=0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_connection</td><td valign="top">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_cookie</td><td valign="top">:</td><td><div>gateone_user=&quot;eyJ1cG4iOiAiQU5PTllNT1VTIiwgInNlc3Npb24iOiAiT1RNME9UQmtOV05rT0ROaE5HWmlZemsxTm1Oa1lXWmlZamt4Tm1ZMk56WXlOIn0=|1375131417|09bdf15e97a23f37aa2c7e33f32640342bdb8886&quot;; __utma=96992031.340645553.1375131420.1375187312.1375215400.4; __utmz=96992031.1375131420.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); session_id_agenda=127.0.0.1-a4393583-5309-4647-8c48-4d03b6bbcffe; session_id_ura=127.0.0.1-58644cb9-2ad7-4996-9be5-23cfa11e051e</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_host</td><td valign="top">:</td><td><div>127.0.0.1:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">http_user_agent</td><td valign="top">:</td><td><div>Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.4 (KHTML, like Gecko) Ubuntu/12.10 Chromium/22.0.1229.94 Chrome/22.0.1229.94 Safari/537.4</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_jython</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_pypy</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">local_hosts</td><td valign="top">:</td><td><div><table><tr><td><div>::1</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr><tr><td><div>fernando-workstation</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path_info</td><td valign="top">:</td><td><div>/ura/ura_acoes</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">query_string</td><td valign="top">:</td><td><div>id=1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">remote_addr</td><td valign="top">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">remote_port</td><td valign="top">:</td><td><div>34081</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">request_method</td><td valign="top">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">request_uri</td><td valign="top">:</td><td><div>/ura/initial/ura_acoes?id=1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">script_name</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_name</td><td valign="top">:</td><td><div>fernando-workstation</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_port</td><td valign="top">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_protocol</td><td valign="top">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">server_software</td><td valign="top">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">web2py_original_uri</td><td valign="top">:</td><td><div>/ura/ura_acoes?id=1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">web2py_path</td><td valign="top">:</td><td><div>/home/fernado/web2py/tronco</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">web2py_version</td><td valign="top">:</td><td><div>2.5.1-stable+timestamp.2013.06.06.15.39.19</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_errors</td><td valign="top">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0x7ff81f0cb270&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_file_wrapper</td><td valign="top">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x1d514c8&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_input</td><td valign="top">:</td><td><div>&lt;socket._fileobject object at 0x7ff80c24bed0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_multiprocess</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_multithread</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_run_once</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_url_scheme</td><td valign="top">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi_version</td><td valign="top">:</td><td><div><table><tr><td><div>1</div></td></tr><tr><td><div>0</div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">extension</td><td valign="top">:</td><td><div>html</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">folder</td><td valign="top">:</td><td><div>/home/fernado/web2py/tronco/applications/ura/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">function</td><td valign="top">:</td><td><div>ura_acoes</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">get_vars</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">id</td><td valign="top">:</td><td><div>1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">global_settings</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">app_folders</td><td valign="top">:</td><td><div>set([&#x27;/home/fernado/web2py/tronco/applications/agenda/&#x27;, &#x27;/home/fernado/web2py/tronco/applications/ura/&#x27;])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">applications_parent</td><td valign="top">:</td><td><div>/home/fernado/web2py/tronco</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cmd_args</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cmd_options</td><td valign="top">:</td><td><div>&lt;Values at 0x1ddbb00: {&#x27;verbose&#x27;: False, &#x27;ip&#x27;: &#x27;127.0.0.1&#x27;, &#x27;with_scheduler&#x27;: False, &#x27;ips&#x27;: [], &#x27;shutdown_timeout&#x27;: 5, &#x27;taskbar&#x27;: False, &#x27;with_coverage&#x27;: False, &#x27;port&#x27;: 8000, &#x27;maxthreads&#x27;: None, &#x27;softcron&#x27;: False, &#x27;server_name&#x27;: &#x27;fernando-workstation&#x27;, &#x27;bpython&#x27;: False, &#x27;nogui&#x27;: False, &#x27;pid_filename&#x27;: &#x27;httpserver.pid&#x27;, &#x27;extcron&#x27;: False, &#x27;runcron&#x27;: False, &#x27;run_system_tests&#x27;: False, &#x27;test&#x27;: None, &#x27;folder&#x27;: &#x27;/home/fernado/web2py/tronco&#x27;, &#x27;config&#x27;: &#x27;&#x27;, &#x27;minthreads&#x27;: None, &#x27;winservice&#x27;: &#x27;&#x27;, &#x27;shell&#x27;: None, &#x27;run&#x27;: &#x27;&#x27;, &#x27;log_filename&#x27;: &#x27;httpserver.log&#x27;, &#x27;debuglevel&#x27;: 30, &#x27;args&#x27;: [&#x27;&#x27;], &#x27;socket_timeout&#x27;: 5, &#x27;ssl_ca_certificate&#x27;: None, &#x27;scheduler&#x27;: None, &#x27;profiler_filename&#x27;: None, &#x27;ssl_private_key&#x27;: &#x27;&#x27;, &#x27;scheduler_groups&#x27;: None, &#x27;password&#x27;: &#x27;123456&#x27;, &#x27;request_queue_size&#x27;: 5, &#x27;ssl_certificate&#x27;: &#x27;&#x27;, &#x27;cronjob&#x27;: False, &#x27;numthreads&#x27;: None, &#x27;quiet&#x27;: False, &#x27;interfaces&#x27;: None, &#x27;import_models&#x27;: False, &#x27;timeout&#x27;: 10, &#x27;plain&#x27;: False, &#x27;nobanner&#x27;: False}&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">db_sessions</td><td valign="top">:</td><td><div>set([])</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">debugging</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">gluon_parent</td><td valign="top">:</td><td><div>/home/fernado/web2py/tronco</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_jython</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_pypy</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">local_hosts</td><td valign="top">:</td><td><div><table><tr><td><div>::1</div></td></tr><tr><td><div>::ffff:127.0.0.1</div></td></tr><tr><td><div>127.0.0.1</div></td></tr><tr><td><div>fernando-workstation</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">web2py_version</td><td valign="top">:</td><td><div>2.5.1-stable+timestamp.2013.06.06.15.39.19</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_https</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_local</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">is_restful</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">now</td><td valign="top">:</td><td><div>datetime.datetime(2013, 8, 16, 9, 38, 25, 781215)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">post_vars</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">url</td><td valign="top">:</td><td><div>/ura/ura_acoes</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">utcnow</td><td valign="top">:</td><td><div>datetime.datetime(2013, 8, 16, 12, 38, 25, 781266)</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">uuid</td><td valign="top">:</td><td><div>ura/127.0.0.1.2013-08-16.09-38-25.57317d26-a44a-4cbe-8288-e4cb144cce51</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">vars</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">id</td><td valign="top">:</td><td><div>1</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">environ</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT</td><td valign="top">:</td><td><div>text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT_CHARSET</td><td valign="top">:</td><td><div>ISO-8859-1,utf-8;q=0.7,*;q=0.3</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT_ENCODING</td><td valign="top">:</td><td><div>gzip,deflate,sdch</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_ACCEPT_LANGUAGE</td><td valign="top">:</td><td><div>pt-BR,pt;q=0.8,en-US;q=0.6,en;q=0.4</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_CACHE_CONTROL</td><td valign="top">:</td><td><div>max-age=0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_CONNECTION</td><td valign="top">:</td><td><div>keep-alive</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_COOKIE</td><td valign="top">:</td><td><div>gateone_user=&quot;eyJ1cG4iOiAiQU5PTllNT1VTIiwgInNlc3Npb24iOiAiT1RNME9UQmtOV05rT0ROaE5HWmlZemsxTm1Oa1lXWmlZamt4Tm1ZMk56WXlOIn0=|1375131417|09bdf15e97a23f37aa2c7e33f32640342bdb8886&quot;; __utma=96992031.340645553.1375131420.1375187312.1375215400.4; __utmz=96992031.1375131420.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); session_id_agenda=127.0.0.1-a4393583-5309-4647-8c48-4d03b6bbcffe; session_id_ura=127.0.0.1-58644cb9-2ad7-4996-9be5-23cfa11e051e</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_HOST</td><td valign="top">:</td><td><div>127.0.0.1:8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">HTTP_USER_AGENT</td><td valign="top">:</td><td><div>Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.4 (KHTML, like Gecko) Ubuntu/12.10 Chromium/22.0.1229.94 Chrome/22.0.1229.94 Safari/537.4</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">PATH_INFO</td><td valign="top">:</td><td><div>/ura/ura_acoes</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">QUERY_STRING</td><td valign="top">:</td><td><div>id=1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REMOTE_ADDR</td><td valign="top">:</td><td><div>127.0.0.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REMOTE_PORT</td><td valign="top">:</td><td><div>34081</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REQUEST_METHOD</td><td valign="top">:</td><td><div>GET</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">REQUEST_URI</td><td valign="top">:</td><td><div>/ura/initial/ura_acoes?id=1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SCRIPT_NAME</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_NAME</td><td valign="top">:</td><td><div>fernando-workstation</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_PORT</td><td valign="top">:</td><td><div>8000</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_PROTOCOL</td><td valign="top">:</td><td><div>HTTP/1.1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">SERVER_SOFTWARE</td><td valign="top">:</td><td><div>Rocket 1.2.6</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">WEB2PY_ORIGINAL_URI</td><td valign="top">:</td><td><div>/ura/ura_acoes?id=1</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.errors</td><td valign="top">:</td><td><div>&lt;open file &#x27;&lt;stderr&gt;&#x27;, mode &#x27;w&#x27; at 0x7ff81f0cb270&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.file_wrapper</td><td valign="top">:</td><td><div>&lt;class wsgiref.util.FileWrapper at 0x1d514c8&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.input</td><td valign="top">:</td><td><div>&lt;cStringIO.StringO object at 0x7ff80c2bfa08&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.multiprocess</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.multithread</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.run_once</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.url_scheme</td><td valign="top">:</td><td><div>http</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">wsgi.version</td><td valign="top">:</td><td><div>1</div></td></tr></table></div></td></tr></table></div></td></tr></table></div>'
+tRp58
+sS'frames'
+p59
+(lp60
+(dp61
+S'file'
+p62
+S'/home/fernado/web2py/tronco/gluon/restricted.py'
+p63
+sS'dump'
+p64
+(dp65
+S'environment'
+p66
+S"{'A': <class 'gluon.html.A'>, 'ANY_OF': <class 'gluon.validators.ANY_OF'>, 'Acoes': <Table acoes (id,nome,acao)>, 'Audios': <Table audios (id,nome,audio)>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, ...}"
+p67
+sS'ccode'
+p68
+S'<code object <module> at 0x7ff7fc18a130, file "/...applications/ura/controllers/initial.py", line 2>'
+p69
+ssS'lnum'
+p70
+I212
+sS'lines'
+p71
+(dp72
+I207
+S'    try:'
+p73
+sI208
+S'        if isinstance(code, types.CodeType):'
+p74
+sI209
+S'            ccode = code'
+p75
+sI210
+S'        else:'
+p76
+sI211
+S'            ccode = compile2(code, layer)'
+p77
+sI212
+S'        exec ccode in environment'
+p78
+sI213
+S'    except HTTP:'
+p79
+sI214
+S'        raise'
+p80
+sI215
+S'    except RestrictedError:'
+p81
+sI216
+S'        # do not encapsulate (obfuscate) the original RestrictedError'
+p82
+ssS'call'
+p83
+S"(code='# coding=UTF-8\\nimport commands, os\\n\\ndef audio():...\\t\\n\\n\\n\\n\\nresponse._vars=response._caller(ura_acoes)\\n', environment={'A': <class 'gluon.html.A'>, 'ANY_OF': <class 'gluon.validators.ANY_OF'>, 'Acoes': <Table acoes (id,nome,acao)>, 'Audios': <Table audios (id,nome,audio)>, 'Auth': <class 'gluon.tools.Auth'>, 'B': <class 'gluon.html.B'>, 'BEAUTIFY': <class 'gluon.html.BEAUTIFY'>, 'BODY': <class 'gluon.html.BODY'>, 'BR': <class 'gluon.html.BR'>, 'BUTTON': <class 'gluon.html.BUTTON'>, ...}, layer='/home/fernado/web2py/tronco/applications/ura/controllers/initial.py')"
+p84
+sS'func'
+p85
+S'restricted'
+p86
+sa(dp87
+g62
+S'/home/fernado/web2py/tronco/applications/ura/controllers/initial.py'
+p88
+sg64
+(dp89
+sg70
+I208
+sg71
+(dp90
+I197
+S''
+sI198
+S'def download():'
+p91
+sI199
+S'\treturn response.download(request, db)'
+p92
+sI200
+S''
+sI201
+S''
+sI202
+S''
+sI203
+S''
+sI204
+S''
+sI205
+S''
+sI206
+S''
+ssg83
+S'()'
+p93
+sg85
+S'<module>'
+p94
+sa(dp95
+g62
+S'/home/fernado/web2py/tronco/gluon/globals.py'
+p96
+sg64
+(dp97
+S'self'
+p98
+S'undefined'
+p99
+sS'f'
+S'<function ura_acoes>'
+p100
+ssg70
+I194
+sg71
+(dp101
+I192
+S"        self.delimiters = ('{{', '}}')"
+p102
+sI193
+S'        self._vars = None'
+p103
+sI194
+S'        self._caller = lambda f: f()'
+p104
+sI195
+S'        self._view_environment = None'
+p105
+sI196
+S'        self._custom_commit = None'
+p106
+sI197
+S'        self._custom_rollback = None'
+p107
+sI198
+S''
+sI189
+S'        self.menu = []             # used by the default view layout'
+p108
+sI190
+S'        self.files = []            # used by web2py_ajax.html'
+p109
+sI191
+S'        self.generic_patterns = []  # patterns to allow generic views'
+p110
+ssg83
+S'(f=<function ura_acoes>)'
+p111
+sg85
+S'<lambda>'
+p112
+sa(dp113
+g62
+S'/home/fernado/web2py/tronco/applications/ura/controllers/initial.py'
+p114
+sg64
+(dp115
+S'orderby'
+p116
+g99
+sS'id_ura'
+p117
+S"'1'"
+p118
+sS'db.ura_acoes.dtmf'
+p119
+S'<gluon.dal.Field object>'
+p120
+sS'db.ura_acoes'
+p121
+S'<Table ura_acoes (id,id_ura,dtmf,id_acao,variavel)>'
+p122
+sS'db.ura_acoes.id_ura'
+p123
+S'<gluon.dal.Field object>'
+p124
+sS'global db'
+p125
+S'<DAL uri="mysql:******@localhost/adm">'
+p126
+sS'query'
+p127
+g99
+ssg70
+I101
+sg71
+(dp128
+I96
+S'def ura_acoes():'
+p129
+sI97
+S"\tresponse.title = 'Detalhada'"
+p130
+sI98
+S'\tid_ura = request.vars.id'
+p131
+sI99
+S'\tdb.ura_acoes.id.readable=False'
+p132
+sI100
+S''
+sI101
+S'\tquery = ((db.ura_acoes.id_ura == id_ura) (orderby=db.ura_acoes.dtmf))'
+p133
+sI102
+S''
+sI103
+S'\tgrid = SQLFORM.grid(query, csv=False,'
+p134
+sI104
+S'\t\t\t\t\tdetails=False, searchable=True, editable=True,'
+p135
+sI105
+S'\t\t\t\t\tcreate=False,  user_signature=False)'
+p136
+ssg83
+S'()'
+p137
+sg85
+S'ura_acoes'
+p138
+sasS'pyver'
+p139
+S'Python 2.7.3: /usr/bin/python (prefix: /usr)'
+p140
+sS'session'
+p141
+g57
+(S's~\x03\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top">ano</td><td valign="top">:</td><td><div>0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">form_ano</td><td valign="top">:</td><td><div><table><tr><td><div>2013</div></td></tr><tr><td><div>2012</div></td></tr><tr><td><div>2011</div></td></tr><tr><td><div>2010</div></td></tr><tr><td><div>2009</div></td></tr><tr><td><div>2008</div></td></tr><tr><td><div>2007</div></td></tr><tr><td><div>2006</div></td></tr><tr><td><div>2005</div></td></tr><tr><td><div>2004</div></td></tr><tr><td><div>2003</div></td></tr><tr><td><div>2002</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">mes</td><td valign="top">:</td><td><div>0</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">pastas</td><td valign="top">:</td><td><div><table></table></div></td></tr></table></div>'
+tRp142
+sS'etype'
+p143
+S"<type 'exceptions.TypeError'>"
+p144
+sS'date'
+p145
+S'Fri Aug 16 09:38:25 2013'
+p146
+sS'response'
+p147
+g57
+(S's\xdc\x18\x00\x00<div><table><tr><td style="font-weight:bold;vertical-align:top">body</td><td valign="top">:</td><td><div>&lt;cStringIO.StringO object at 0x7ff7fc1a08f0&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">cookies</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">session_id_ura</td><td valign="top">:</td><td><div>127.0.0.1-58644cb9-2ad7-4996-9be5-23cfa11e051e<table><tr><td style="font-weight:bold;vertical-align:top">comment</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">domain</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">expires</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">httponly</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">max-age</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">path</td><td valign="top">:</td><td><div>/</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">secure</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">version</td><td valign="top">:</td><td><div></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">delimiters</td><td valign="top">:</td><td><div><table><tr><td><div>{{</div></td></tr><tr><td><div>}}</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">files</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">flash</td><td valign="top">:</td><td><div></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">generic_patterns</td><td valign="top">:</td><td><div><table><tr><td><div>*</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">google_analytics_id</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">headers</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">X-Powered-By</td><td valign="top">:</td><td><div>web2py</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">logo</td><td valign="top">:</td><td><div><a class="brand" href="#"><b><span>Menu</span></b></a></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">menu</td><td valign="top">:</td><td><div><table><tr><td><div><table><tr><td><div>Audios</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/ura/audio</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr><tr><td><div><table><tr><td><div>Uras</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/ura/uras</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">menu2</td><td valign="top">:</td><td><div><table><tr><td><div><table><tr><td><div>Sobre</div></td></tr><tr><td><div>False</div></td></tr><tr><td><div>/ura/sobre</div></td></tr><tr><td><div><table></table></div></td></tr></table></div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">meta</td><td valign="top">:</td><td><div><table><tr><td style="font-weight:bold;vertical-align:top">author</td><td valign="top">:</td><td><div>Your Name &lt;you@example.com&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">description</td><td valign="top">:</td><td><div>a cool new app</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">generator</td><td valign="top">:</td><td><div>Web2py Web Framework</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">keywords</td><td valign="top">:</td><td><div>web2py, python, framework</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">models_to_run</td><td valign="top">:</td><td><div><table><tr><td><div>^\\w+\\.py$</div></td></tr><tr><td><div>^initial/\\w+\\.py$</div></td></tr><tr><td><div>^initial/ura_acoes/\\w+\\.py$</div></td></tr></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">postprocessing</td><td valign="top">:</td><td><div><table></table></div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_cookie_expires</td><td valign="top">:</td><td><div>None</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_data_name</td><td valign="top">:</td><td><div>session_data_ura</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_file</td><td valign="top">:</td><td><div>&lt;open file &#x27;/home/fernado/web2py/tronco/applications/ura/sessions/127.0.0.1-58644cb9-2ad7-4996-9be5-23cfa11e051e&#x27;, mode &#x27;rb+&#x27; at 0x7ff7fc0f8150&gt;</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_filename</td><td valign="top">:</td><td><div>/home/fernado/web2py/tronco/applications/ura/sessions/127.0.0.1-58644cb9-2ad7-4996-9be5-23cfa11e051e</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id</td><td valign="top">:</td><td><div>127.0.0.1-58644cb9-2ad7-4996-9be5-23cfa11e051e</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_id_name</td><td valign="top">:</td><td><div>session_id_ura</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_locked</td><td valign="top">:</td><td><div>True</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_new</td><td valign="top">:</td><td><div>False</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">session_storage_type</td><td valign="top">:</td><td><div>file</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">status</td><td valign="top">:</td><td><div>200</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">subtitle</td><td valign="top">:</td><td><div>customize me!</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">title</td><td valign="top">:</td><td><div>Detalhada</div></td></tr><tr><td style="font-weight:bold;vertical-align:top">view</td><td valign="top">:</td><td><div>initial/ura_acoes.html</div></td></tr></table></div>'
+tRp148
+sS'locals'
+p149
+(dp150
+S'id_ura'
+p151
+S"'1'"
+p152
+sssS'traceback'
+p153
+S'Traceback (most recent call last):\n  File "/home/fernado/web2py/tronco/gluon/restricted.py", line 212, in restricted\n    exec ccode in environment\n  File "/home/fernado/web2py/tronco/applications/ura/controllers/initial.py", line 208, in <module>\n  File "/home/fernado/web2py/tronco/gluon/globals.py", line 194, in <lambda>\n    self._caller = lambda f: f()\n  File "/home/fernado/web2py/tronco/applications/ura/controllers/initial.py", line 101, in ura_acoes\n    query = ((db.ura_acoes.id_ura == id_ura) (orderby=db.ura_acoes.dtmf))\nTypeError: \'Query\' object is not callable\n'
+p154
+s.

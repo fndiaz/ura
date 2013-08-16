@@ -1,0 +1,15 @@
+{{extend 'layout.html'}}
+
+{{block center}}
+<a id="add" style="margin-left: 1080px;" class="btn btn-info" data-original-title="Adicionar">Adicionar</a>
+{{=grid}}
+
+<script>
+
+$('#add').click(function() {
+	location.href="/ura/add_audio";
+});
+
+</script>
+
+{{end}}

@@ -1,0 +1,212 @@
+{{extend 'layout.html'}}
+
+{{block coluna2}}
+
+<!-- o que vem do controller
+{{=form.custom.begin}}
+<div>CP1:<br>{{=form.custom.widget.teste}}</div>
+<div id="a1" style="display: block;">CP2:<br>{{=form.custom.widget.dep1}}</div>
+<div id="a2" style="display: block;">CP3:<br>{{=form.custom.widget.dep2}}</div>
+{{=form.custom.submit}}
+{{=form.custom.end}}
+-->
+
+<div class="span6">
+<div class="well">
+
+<form id='form_ura' action="form_ura_acoes" class="bs-docs-example" enctype="multipart/form-data" method="post">
+<legend>Ações Ura</legend>
+
+
+<div>
+<label>Ura:</label>
+<select class="generic-widget" id="drop1" name="ura">
+</select>
+</div>
+
+<div id="div_dtmf">
+<label>Dtmf:</label>
+<input class="string" id="dtmf" type="text" value="" name="dtmf" autocomplete="off">
+</div>
+
+<div>
+<label>Ação:</label>
+<select class="generic-widget" id="drop2" name="acao">
+	<option value=""></option>
+</select>	
+</div>
+
+<div id="div_drop3" style="display: none;" value="">
+<label>Opção</label>
+<select class="generic-widget" id="drop3" name="opc">
+	<option value=""></option>
+</select>	
+<br>
+</div>
+
+<br>
+  <input type="submit" value="Criar" />
+  <input type="hidden" name="_formname" value="test" />
+
+</form>
+
+</div>
+</div>
+
+<script src="static/js/jquery_validate.js" type="text/javascript"></script>
+<script>
+$(document).ready(function(){
+
+	function getParam(n){ //funcao get variaveis url
+	return (location.search.match(new RegExp(n + '=([^?&=]+)')) || [])[1] || '';
+	}
+
+	//var id = getParam('id');
+	//alert(id)
+	//var name = getParam('name');
+	//alert(name)
+
+	//var dados = [[10, "Atendimento"], [22, "Suporte"], [33, "Sac"], [36, "teste"]] 
+	$.ajax({//populando drop
+	method: "get",
+	url: "initial/ajax_uras",
+	dataType: "json",
+	success: function(uras){	
+		for(var i=0, l=uras.length; i<l; i++){
+    		var fila = uras[i][1];
+    		var $select = $('#drop1'); //seleciona drop
+    		$select.append($('<option />', { value: uras[i][0], text: uras[i][1] })); //inserindo dados 	
+    	}//for
+    	var id = getParam('id'); //pega request id
+    	$('#drop1 option[value="'+id+'"]').attr('selected',true); //seleciona id no drop
+    }//sucsess
+});//ajax
+
+
+	$.ajax({//populando drop
+	method: "get",
+	url: "initial/ajax_acoes",
+	dataType: "json",
+	success: function(acoes){	
+		for(var i=0, l=acoes.length; i<l; i++){
+    		//var fila = dados[i].a;
+    		var fila = acoes[i][1];
+    		//alert(fila)
+    		var $select = $('#drop2'); //seleciona drop
+    		$select.append($('<option />', { value: acoes[i][0], text: acoes[i][1] })); //inserindo 	
+    	}//for
+    }//success
+});//ajax
+
+	$("#drop2").change(function() { //pegando valor clicado no drop
+		var valor = $(this).val();
+		if (valor == '1'){
+			$("#div_drop3").css("display", "block"); //visibilidade drop
+			$("#drop3").empty(); //limpando drop
+			
+			$.ajax({
+			method: "get",
+			url: "initial/ajax_ramais",
+			dataType: "json",
+			success: function(ramais){
+				for(var i=0, l=ramais.length; i<l; i++){
+    				var $select = $('#drop3'); //seleciona drop
+    				$select.append($('<option />', { value: ramais[i][0], text: ramais[i][0] })); //inserindo	
+    			}//for
+    		}//sucess
+			});//ajax
+		}//if valor
+
+		if (valor == '2'){
+			$("#div_drop3").css("display", "block");
+			$("#drop3").empty(); //limpando segundo drop
+
+			$.ajax({
+			method: "get",
+			url: "initial/ajax_uras",
+			dataType: "json",
+			success: function(uras){
+				for(var i=0, l=uras.length; i<l; i++){
+    				var $select = $('#drop3'); //Primeiro drop
+    				$select.append($('<option />', { value: uras[i][1], text: uras[i][1] })); //inserindo dados drop	
+    			}//for
+    		}//sucess
+			});//ajax
+		}//if valor
+
+		if (valor == '3'){
+			$("#div_drop3").css("display", "block");
+			$("#drop3").empty(); //limpando segundo drop
+
+			$.ajax({
+			method: "get",
+			url: "initial/ajax_audios",
+			dataType: "json",
+			success: function(audios){
+				for(var i=0, l=audios.length; i<l; i++){
+    				var $select = $('#drop3'); //Primeiro drop
+    				$select.append($('<option />', { value: audios[i][1], text: audios[i][1] })); //inserindo dados drop	
+    			}//for
+    		}//sucess
+			});//ajax
+		}//if valor
+
+		if (valor == '4'){
+			$("#div_drop3").css("display", "none");
+		}
+
+	});//pegando valor clicado no drop	
+
+
+	$("#no_table_teste").change(function() {
+		var valor = $(this).val();
+		if (valor == '1'){
+			//alert('aa');
+			$("#a1").css("display", "block");
+			$("#a2").css("display", "none");
+		}
+		if (valor == '2'){
+			$("#a1").css("display", "none");
+			$("#a2").css("display", "block")
+		}
+	});
+
+var id = getParam('id'); //pega request id
+$("#form_ura").validate({
+       // Define as regras
+        rules:{
+
+            dtmf:{
+                // campoNome será obrigatório (required) e terá tamanho mínimo (minLength)
+                required: true,
+                //number: true, 
+                maxlength: 4,
+                remote: 'valida_form?id='+id+''
+            },
+            acao:{
+                required: true,
+            }
+        },
+
+        // Define as mensagens de erro para cada regra
+        messages:{
+
+            dtmf:{
+                required: "Coloque o valor a ser digitado",
+                //number: "O valor deve ser númerico",
+                maxlength : "Máximo 4 númeors",
+                remote: "O valor já existe"
+            },
+            acao:{
+                required: "Selecione a ação",
+            }
+        }
+    });
+
+
+
+
+});
+</script>
+
+{{end}}
